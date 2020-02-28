@@ -1,21 +1,22 @@
 <template>
   <div>
-    <h1>Hot Dog or Not Hot Dog?</h1>
+    <h1>Hot Dog or Pizza?</h1>
     <div id="webcam-container" />
-    <p v-if="!mobilenetModel || !webcam">Loading...</p>
+    <p v-if="!model || !webcam">Loading...</p>
     <div v-else>
       <p v-if="isPredicting">Predicting...</p>
       <button v-else-if="!prediction" @click="predict(false)">Predict</button>
       <button v-else @click="reset">Reset</button>
-      <h2 v-if="prediction">{{ notHotDogResults }}</h2>
-      <br /><br />
       <h3>{{ resultsString }}</h3>
-      <p>{{ fullResults }}</p>
     </div>
   </div>
 </template>
 
 <script>
+const URL = 'https://teachablemachine.withgoogle.com/models/M-F7kky7/';
+const modelURL = URL + 'model.json';
+const metadataURL = URL + 'metadata.json';
+
 import _ from 'lodash';
 // import * as tf from '@tensorflow/tfjs';
 import * as tmImage from '@teachablemachine/image';
@@ -25,6 +26,7 @@ export default {
   name: 'NotHotDog',
   data() {
     return {
+      model: null,
       mobilenetModel: null,
       webcam: null,
       maxPredictions: null,
@@ -38,23 +40,6 @@ export default {
   computed: {
     resultsString() {
       return this.prediction ? this.topPredictionString(this.prediction) : '';
-    },
-    fullResults() {
-      return this.prediction ? JSON.stringify(this.prediction) : '';
-    },
-    isHotDog() {
-      if (!this.prediction) {
-        return false;
-      }
-      for (let i = 0; i < this.prediction.length; i++) {
-        if (this.prediction[i].className.includes('hotdog')) {
-          return true;
-        }
-      }
-      return false;
-    },
-    notHotDogResults() {
-      return this.isHotDog ? 'Hot Dog' : 'Not Hot Dog';
     },
   },
   methods: {
@@ -73,6 +58,7 @@ export default {
         .appendChild(this.webcam.canvas);
     },
     async loadModel() {
+      this.model = await tmImage.load(modelURL, metadataURL);
       this.mobilenetModel = await mobilenet.load();
     },
     loop() {
@@ -87,11 +73,11 @@ export default {
     },
     async predict(ignoreResult = false) {
       if (ignoreResult) {
-        await this.mobilenetModel.classify(this.webcam.canvas);
+        await this.model.predict(this.webcam.canvas);
         return;
       }
       this.isPredicting = true;
-      this.prediction = await this.mobilenetModel.classify(this.webcam.canvas);
+      this.prediction = await this.model.predict(this.webcam.canvas);
       this.isPredicting = false;
       console.log(JSON.stringify(this.prediction));
     },

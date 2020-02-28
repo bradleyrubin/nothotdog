@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@teachablemachine/image": "^0.8.4",
+    "@tensorflow-models/mobilenet": "^2.0.4",
     "@tensorflow/tfjs": "^1.5.2",
     "core-js": "^3.6.4",
     "lodash": "^4.17.15",
